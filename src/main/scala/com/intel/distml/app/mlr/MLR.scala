@@ -17,10 +17,10 @@ object MLR {
   @throws(classOf[InterruptedException])
   def main(args: Array[String]) {
 
-    var sparkMaster = args(0)
-    var sparkHome = args(1)
-    var sparkMem = args(2)
-    var appJars = args(3)
+    val sparkMaster = args(0)
+    val sparkHome = args(1)
+    val sparkMem = args(2)
+    val appJars = args(3)
 
     val conf = new SparkConf()
       .setMaster(sparkMaster)

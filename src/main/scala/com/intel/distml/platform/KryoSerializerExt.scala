@@ -9,13 +9,13 @@ import akka.event.Logging
 object KryoSerializerExt extends ExtensionId[KryoSerialization] with ExtensionIdProvider {
   override def get(system: ActorSystem): KryoSerialization = super.get(system)
 
-  override def lookup = KryoSerializerExt
+  override def lookup() = KryoSerializerExt
 
   override def createExtension(system: ExtendedActorSystem): KryoSerialization = new KryoSerialization(system)
 }
 
 class KryoSerialization(val system: ExtendedActorSystem) extends Extension {
 
-//  val settings = new Settings(system)
+  //  val settings = new Settings(system)
   val log = Logging(system, getClass.getName)
 }

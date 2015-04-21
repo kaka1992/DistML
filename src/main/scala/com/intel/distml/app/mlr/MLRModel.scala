@@ -22,20 +22,19 @@ class MLRModel extends SparseLRModel(MLR.MLR_DIM) {
    * @return
    */
   override def transformSamples(sampleList: java.util.List[AnyRef]): Matrix = {
-    val strObj = sampleList.get(0);
+    val strObj = sampleList.get(0)
     val str: String = strObj.asInstanceOf[String]
     System.out.println("sample string: [" + str + "]")
     val strs: Array[String] = str.split(" ")
     val sample: LRSample = new LRSample(MLR.MLR_DIM)
     sample.label = strs(0).toDouble
 
-    for (i <- 0 to strs.length-1) {
+    for (i <- 0 until strs.length) {
       val tmp: Array[String] = strs(i).split(":")
       val key: Long = tmp(0).toInt
       val value: Double = tmp(1).toDouble
       sample.data().put(key, value)
     }
-
-    return sample
+    sample
   }
 }

@@ -2,28 +2,21 @@ package com.intel.distml.platform
 
 import java.util
 
-import scala.reflect.runtime.universe._
-import scala.reflect._
-
-import com.intel.distml.api.{DMatrix, DefaultModelWriter, ModelWriter, Model}
-import org.apache.spark.rdd.RDD
-import scala.collection.JavaConversions
-import org.apache.spark.SparkContext
-import com.intel.distml.platform.server.ParameterServerActor
-import com.intel.distml.platform.worker.WorkerLeadActor
-import com.intel.distml.platform.worker.WorkerActor
-
-import com.intel.distml.util.{Matrix, Logger, IOHelper}
-
-import com.intel.distml.platform.monitor._
-
 import akka.actor._
+import com.intel.distml.api.{DMatrix, DefaultModelWriter, Model, ModelWriter}
+import com.intel.distml.platform.monitor._
+import com.intel.distml.platform.server.ParameterServerActor
+import com.intel.distml.platform.worker.{WorkerActor, WorkerLeadActor}
+import com.intel.distml.util.{Logger, Matrix}
 import com.typesafe.config._
+import org.apache.spark.SparkContext
+import org.apache.spark.rdd.RDD
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.JavaConversions
 import scala.reflect.ClassTag
+import scala.reflect.runtime.universe._
 
-object TrainingHelper  {
+object TrainingHelper {
 
   // Shutdown of sub actor system should not be treated as error, so we should set
   // akka.remote.log-remote-lifecycle-events=off
@@ -57,18 +50,23 @@ object TrainingHelper  {
       |}
     """.stripMargin
 
-  def startTraining[T:ClassTag](spark : SparkContext, model : Model, samples: RDD[T], config : TrainingConf): Unit = {
+  def startTraining[T: ClassTag](
+      spark: SparkContext,
+      model: Model,
+      samples: RDD[T],
+      config: TrainingConf): Unit =
+    startTraining(spark, model, samples, config, new DefaultModelWriter())
 
-    startTraining(spark, model, samples, config, new DefaultModelWriter());
 
-  }
-
-  def startTraining[T:ClassTag](spark : SparkContext, model : Model, samples: RDD[T], config : TrainingConf, modelWriter : ModelWriter): Unit = {
-
-    model.partitionParams(config.psCount);
+  def startTraining[T: ClassTag](
+      spark: SparkContext,
+      model: Model, samples: RDD[T],
+      config: TrainingConf,
+      modelWriter: ModelWriter): Unit = {
+    model.partitionParams(config.psCount)
 
     val params = new java.util.HashMap[String, Matrix]()
-    for (iter <- 0 to config.iteration - 1) {
+    for (iter <- 0 until config.iteration) {
       params.clear()
       val it = model.dataMap.entrySet().iterator()
       while (it.hasNext) {
@@ -86,20 +84,24 @@ object TrainingHelper  {
 
       startIteration(spark, model, params, samples, config, modelWriter)
     }
-
   }
 
-  def startIteration[T:ClassTag](spark : SparkContext, model : Model, params : util.HashMap[String, Matrix], samples: RDD[T], config : TrainingConf, modelWriter : ModelWriter) {
-
+  def startIteration[T: ClassTag](
+       spark: SparkContext,
+       model: Model,
+       params: util.HashMap[String, Matrix],
+       samples: RDD[T],
+       config: TrainingConf,
+       modelWriter: ModelWriter) {
     if (config.totalSampleCount <= 0) {
       config.totalSampleCount = samples.count()
       systemLog("totalSampleCount = " + config.totalSampleCount)
     }
 
     if (config.progressStepSize <= 0) {
-      config.progressStepSize = (config.totalSampleCount / 100).toInt;
+      config.progressStepSize = (config.totalSampleCount / 100).toInt
       if (config.progressStepSize <= 0) {
-        config.progressStepSize = 1;
+        config.progressStepSize = 1
       }
     }
 
@@ -122,41 +124,42 @@ object TrainingHelper  {
     val tmp = samples.repartition(config.groupSize * config.groupCount)
 
     val data2 = samples.take(config.psCount)
-    val rdd2 : RDD[T] = spark.parallelize(data2, config.psCount)
+    val rdd2: RDD[T] = spark.parallelize(data2, config.psCount)
     val newSamples = tmp.union(rdd2)
     systemLog("new sample partitions: " + newSamples.partitions.length)
 
-    newSamples.mapPartitionsWithIndex(startFunction(monitorActorPath, model, config)).collect
+    newSamples.mapPartitionsWithIndex(startFunction(monitorActorPath, model, config)).collect()
 
     systemLog("waiting monitor to die")
-    monitorActorSystem.awaitTermination();
+    monitorActorSystem.awaitTermination()
     systemLog("monitor dies")
   }
 
   def paramInfo[T: TypeTag](x: T): Unit = {
-    val targs = typeOf[T] match { case TypeRef(_, _, args) => args }
+    val targs = typeOf[T] match {
+      case TypeRef(_, _, args) => args
+    }
     println(s"type of $x has type arguments $targs")
   }
 
-  def makeArray[T : reflect.ClassTag](length: Int): Array[T] = {
+  def makeArray[T: reflect.ClassTag](length: Int): Array[T] = {
     val tTag = implicitly[reflect.ClassTag[T]]
     tTag.newArray(length)
   }
 
-  def startFunction[T] (monitorPath : String, model : Model, config : TrainingConf)
-                             (index : Int, samples: Iterator[T]) : Iterator[Int] = {
+  def startFunction[T](monitorPath: String, model: Model, config: TrainingConf)
+                      (index: Int, samples: Iterator[T]): Iterator[Int] = {
 
     val wc = config.groupCount * config.groupSize
 
-    if (index >= wc ) {
+    if (index >= wc)
       parameterStartFunction(monitorPath, model, index - wc)
-    }
-    else {
+    else
       workerStartFunction(monitorPath, model, config)(index, samples)
-    }
+
   }
 
-  def parameterStartFunction (monitorPath : String, model : Model, index : Int) : Iterator[Int] = {
+  def parameterStartFunction(monitorPath: String, model: Model, index: Int): Iterator[Int] = {
     // Init actor system configurations
     val PARAMETER_SERVER_ACTOR_SYSTEM_NAME = "parameter-server-system"
     val PARAMETER_SERVER_ACTOR_NAME = "parameter-server"
@@ -167,7 +170,7 @@ object TrainingHelper  {
       ConfigFactory.load(parameterServerRemoteConfig))
 
     // Start parameter server
-    val parameterServer = parameterServerActorSystem.actorOf(ParameterServerActor.props(monitorPath, model, index),
+    parameterServerActorSystem.actorOf(ParameterServerActor.props(monitorPath, model, index),
       PARAMETER_SERVER_ACTOR_NAME)
     systemLog("Parameter Server Actor System Started")
 
@@ -179,10 +182,10 @@ object TrainingHelper  {
 
   }
 
-  def workerStartFunction[T] (monitorPath : String, model : Model, config : TrainingConf)
-                          (index : Int, samples: Iterator[T]) : Iterator[Int] = {
+  def workerStartFunction[T](monitorPath: String, model: Model, config: TrainingConf)
+                            (index: Int, samples: Iterator[T]): Iterator[Int] = {
 
-    systemLog("starting worker " + index);
+    systemLog("starting worker " + index)
 
     // Init actor system configurations
     val WORKER_ACTOR_SYSTEM_NAME = "worker-system"
@@ -198,7 +201,7 @@ object TrainingHelper  {
         index / config.groupSize, config.miniBatchSize, config), WORKER_LEAD_ACTOR_NAME)
 
     // Start worker
-    val worker = workerActorSystem.actorOf(WorkerActor.props(monitorPath, model, index,
+    workerActorSystem.actorOf(WorkerActor.props(monitorPath, model, index,
       JavaConversions.asJavaIterator(samples), config), WORKER_ACTOR_NAME)
 
     systemLog("Worker Actor System Started")

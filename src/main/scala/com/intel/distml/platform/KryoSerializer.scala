@@ -75,52 +75,48 @@ class KryoSerializer(val system: ExtendedActorSystem) extends akka.serialization
   }
 
   val serializerPool = new ObjectPool[KryoBasedSerializer](1, () => {
-    new KryoBasedSerializer(getKryo(), 409600,200000000)
+    new KryoBasedSerializer(getKryo, 409600,200000000)
   })
 
-  private def getSerializer = serializerPool.fetch
+  private def getSerializer = serializerPool.fetch()
 
   private def releaseSerializer(ser: KryoBasedSerializer) = serializerPool.release(ser)
 
-  private def getKryo(): Kryo = {
-
-
+  private def getKryo: Kryo = {
     val referenceResolver = new MapReferenceResolver()
-    val kryo =  new Kryo(new DefaultClassResolver(), referenceResolver /*, new DefaultStreamFactory()*/)
+    val kryo = new Kryo(new DefaultClassResolver(), referenceResolver /*, new DefaultStreamFactory()*/)
     kryo.setInstantiatorStrategy(new StdInstantiatorStrategy())
 
-//    val kryo: Kryo = new Kryo
     kryo.setReferences(true)
     kryo.setRegistrationRequired(true)
     kryo.addDefaultSerializer(classOf[ActorRef], new ActorRefSerializer(system))
 
-    kryo.register(classOf[Array[Float]]);
-    kryo.register(classOf[java.util.LinkedList[Long]]);
-    kryo.register(classOf[java.util.HashSet[Long]]);
+    kryo.register(classOf[Array[Float]])
+    kryo.register(classOf[java.util.LinkedList[Long]])
+    kryo.register(classOf[java.util.HashSet[Long]])
 
-    kryo.register(classOf[KeyCollection.ALL_KEYS]);
-    kryo.register(classOf[KeyList]);
-    kryo.register(classOf[KeyRange]);
+    kryo.register(classOf[KeyCollection.ALL_KEYS])
+    kryo.register(classOf[KeyList])
+    kryo.register(classOf[KeyRange])
 
-    kryo.register(classOf[PartialDataRequest]);
-    kryo.register(classOf[Data]);
-    kryo.register(classOf[DataList]);
-    kryo.register(classOf[PushDataRequest]);
-    kryo.register(classOf[java.util.LinkedList[Data]]);
-    kryo.register(classOf[PushDataResponse]);
+    kryo.register(classOf[PartialDataRequest])
+    kryo.register(classOf[Data])
+    kryo.register(classOf[DataList])
+    kryo.register(classOf[PushDataRequest])
+    kryo.register(classOf[java.util.LinkedList[Data]])
+    kryo.register(classOf[PushDataResponse])
 
-    kryo.register(classOf[WordVectorWithAlpha]);
-    kryo.register(classOf[Array[WordVectorWithAlpha]]);
-    kryo.register(classOf[HashMapMatrix[WordVectorWithAlpha]]);
-    kryo.register(classOf[java.util.HashMap[Long, WordVectorWithAlpha]]);
-    kryo.register(classOf[Matrix1D[WordVectorWithAlpha]]);
-    kryo.register(classOf[WordVectorUpdate]);
-    kryo.register(classOf[Array[WordVectorUpdate]]);
+    kryo.register(classOf[WordVectorWithAlpha])
+    kryo.register(classOf[Array[WordVectorWithAlpha]])
+    kryo.register(classOf[HashMapMatrix[WordVectorWithAlpha]])
+    kryo.register(classOf[java.util.HashMap[Long, WordVectorWithAlpha]])
+    kryo.register(classOf[Matrix1D[WordVectorWithAlpha]])
+    kryo.register(classOf[WordVectorUpdate])
+    kryo.register(classOf[Array[WordVectorUpdate]])
     //kryo.register(com.intel.scaml.transport.DataBusProtocol.PartialDataRequest.class);
 
-    kryo.register(classOf[SparseWeights]);
-    kryo.register(classOf[WeightItem]);
-
+    kryo.register(classOf[SparseWeights])
+    kryo.register(classOf[WeightItem])
 
     kryo
   }
@@ -144,22 +140,22 @@ class KryoBasedSerializer(val kryo: Kryo, val bufferSize: Int, val maxBufferSize
   def toBinary(obj: AnyRef): Array[Byte] = {
     println("toBinary begin: " + obj + ", " + new java.util.Date() + ", " + Thread.currentThread().getId)
     val buffer = getBuffer
-    var arr: Array[Byte] = null
     try {
-      println("ser begin: " + new java.util.Date());
+      println("ser begin: " + new java.util.Date())
       kryo.writeClassAndObject(buffer, obj)
-
-      arr = buffer.toBytes()
-      println("ser done: " + new java.util.Date() + ", " + arr.length);
+      val arr = buffer.toBytes
+      println("ser done: " + new java.util.Date() + ", " + arr.length)
+      arr
     }
     catch {
-      case e: Exception => e.printStackTrace()
+      case e: Exception =>
+        e.printStackTrace()
+        null
     }
-    finally
+    finally {
       releaseBuffer(buffer)
-
-    println("toBinary done: " + new java.util.Date() + ", " + Thread.currentThread().getId)
-    arr
+      println("toBinary done: " + new java.util.Date() + ", " + Thread.currentThread().getId)
+    }
   }
 
   def fromBinary(bytes: Array[Byte], clazz: Option[Class[_]]): AnyRef = {
@@ -167,12 +163,12 @@ class KryoBasedSerializer(val kryo: Kryo, val bufferSize: Int, val maxBufferSize
     try {
       val obj = kryo.readClassAndObject(new Input(bytes))
       println("fromBinary end: " + obj + ", " + new java.util.Date() + ", " + Thread.currentThread().getId)
-      return obj
+      obj
     }
     catch {
       case e: Exception => e.printStackTrace()
     }
-    return null
+    null
   }
 
   val buf = new Output(bufferSize, maxBufferSize)
@@ -214,7 +210,9 @@ class ObjectPool[T](number: Int, newInstance: () => T) {
 
   private def create: T = {
     size.incrementAndGet match {
-      case e: Int if e > number => size.decrementAndGet; fetch()
+      case e: Int if e > number =>
+        size.decrementAndGet
+        fetch()
       case e: Int => newInstance()
     }
   }

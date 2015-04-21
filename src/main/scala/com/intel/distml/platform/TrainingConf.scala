@@ -14,11 +14,11 @@ package com.intel.distml.platform
  *      upload delta
  *
  */
-class TrainingConf (
-) extends Serializable {
 
-  var totalSampleCount: Long = 0;
-  var progressStepSize: Int = 0;
+class TrainingConf extends Serializable {
+
+  var totalSampleCount: Long = 0
+  var progressStepSize: Int = 0
 
   var miniBatchSize: Int = 1
   var iteration: Int = 1

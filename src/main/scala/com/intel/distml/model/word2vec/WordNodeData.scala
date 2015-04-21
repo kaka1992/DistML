@@ -112,9 +112,7 @@ dim : Int
   }
 }
 */
-class WordVectorWithAlpha (
-                     dim : Int
-                     ) extends Serializable {
+class WordVectorWithAlpha(dim: Int) extends Serializable {
   var index = 0
 
   var syn0 = new Array[Float](dim)
@@ -123,12 +121,11 @@ class WordVectorWithAlpha (
   var syn1 = new Array[Float](dim)
   var alpha1 = new Array[Float](dim)
 
-  def init(initialAlpha : Float) {
-
-    var r = new Random()
-    for (i <- 0 to dim - 1) {
+  def init(initialAlpha: Float) {
+    val r = new Random()
+    for (i<- 0 until dim) {
       val a = r.nextInt(100)
-      syn0(i) = (a/100.0f - 0.5f) / dim
+      syn0(i) = (a / 100.0f - 0.5f) / dim
       syn1(i) = 0.0f
 
       alpha0(i) = initialAlpha
@@ -137,50 +134,50 @@ class WordVectorWithAlpha (
   }
 
   def clear() {
-    for (i <- 0 to dim- 1) {
+    for (i <- 0 until dim) {
       syn0(i) = 0.0f
       syn1(i) = 0.0f
     }
   }
 
   // ============ functions for training and updating =============
-  def f(d : WordVectorWithAlpha) : Float = {
+  def f(d: WordVectorWithAlpha): Float = {
     var f = 0.0f
-    for (j <- 0 to dim-1) {
+    for (j <- 0 until dim) {
       f += syn0(j) * d.syn1(j)
     }
     f
   }
 
-  def calculateDelta0(w : TempNodeData, u : WordVectorUpdate) {
+  def calculateDelta0(w: TempNodeData, u: WordVectorUpdate) {
     var tmp = 0.0f
-    for (j <- 0 to dim-1) {
+    for (j <- 0 until dim) {
       tmp = w.data(j) * alpha0(j)
       syn0(j) += tmp
       u.delta0(j) += tmp
     }
   }
 
-  def calculateDelta1(w : WordVectorWithAlpha, g : Float, u : WordVectorUpdate) {
+  def calculateDelta1(w: WordVectorWithAlpha, g: Float, u: WordVectorUpdate) {
     var tmp = 0.0f
-    for (c <- 0 to dim-1) {
+    for (c <- 0 until dim) {
       tmp = g * w.syn0(c) * alpha1(c)
       syn1(c) += tmp
       u.delta1(c) += tmp
     }
   }
 
-  def calculateDelta1(d : TempNodeData, g : Float, u : WordVectorUpdate) {
+  def calculateDelta1(d: TempNodeData, g: Float, u: WordVectorUpdate) {
     var tmp = 0.0f
-    for (c <- 0 to dim-1) {
+    for (c <- 0 until dim) {
       tmp = g * d.data(c) * alpha1(c)
       syn1(c) += tmp
       u.delta1(c) += tmp
     }
   }
 
-  def mergeDelta0(d : TempNodeData, u : WordVectorUpdate) {
-    for (i <- 0 to dim -1) {
+  def mergeDelta0(d: TempNodeData, u: WordVectorUpdate) {
+    for (i <- 0 to dim - 1) {
       val delta = d.data(i)
       syn0(i) += delta
       u.delta0(i) += delta * delta
@@ -192,8 +189,8 @@ class WordVectorWithAlpha (
     }
   }
 
-  def mergeDelta1(d : TempNodeData, u : WordVectorUpdate) {
-    for (i <- 0 to dim -1) {
+  def mergeDelta1(d: TempNodeData, u: WordVectorUpdate) {
+    for (i <- 0 to dim - 1) {
       val delta = d.data(i)
       syn1(i) += delta
       u.delta1(i) += delta * delta
@@ -207,87 +204,67 @@ class WordVectorWithAlpha (
 }
 
 
-class WordVector (
-                     dim : Int
-                     ) extends Serializable {
+class WordVector(dim: Int) extends Serializable {
   var index = 0
 
   var syn0 = new Array[Float](dim)
   var syn1 = new Array[Float](dim)
 
   def init() {
-    var r = new Random()
-    for (i <- 0 to dim - 1) {
+    val r = new Random()
+    for (i <- 0 until dim) {
       val a = r.nextInt(100)
-      syn0(i) = (a/100.0f - 0.5f) / dim
+      syn0(i) = (a / 100.0f - 0.5f) / dim
       syn1(i) = 0.0f
     }
   }
 
   def clear() {
-    for (i <- 0 to dim- 1) {
+    for (i <- 0 until dim) {
       syn0(i) = 0.0f
       syn1(i) = 0.0f
     }
   }
 }
 
-class WordVectorUpdate (
-                     dim : Int
-                     ) extends Serializable {
+class WordVectorUpdate(dim: Int) extends Serializable {
   var index = 0
 
   var delta0 = new Array[Float](dim)
   var delta1 = new Array[Float](dim)
 
   def init(): Unit = {
-    clear();
+    clear()
   }
 
   def clear() {
-    for (i <- 0 to dim - 1) {
+    for (i <- 0 until dim) {
       delta0(i) = 0.0f
       delta1(i) = 0.0f
     }
   }
 }
 
-
-
-class TempNodeData (
-dim : Int
-) {
+class TempNodeData(dim: Int) {
   var data = new Array[Float](dim)
 
-  def clear() {
-    for (i <- 0 to dim - 1) {
+  def clear(): Unit =
+    for (i <- 0 until dim)
       data(i) = 0.0f
-    }
-  }
 
-  def addFromSyn0(d : WordVectorWithAlpha) {
-    for (c <- 0 to dim-1) {
+  def addFromSyn0(d: WordVectorWithAlpha): Unit =
+    for (c <- 0 until dim)
       data(c) += d.syn0(c)
-    }
-  }
 
-  def accumSyn1(d : WordVectorWithAlpha, g : Float) {
-    for (c <- 0 to dim-1) {
+  def accumSyn1(d: WordVectorWithAlpha, g: Float): Unit =
+    for (c <- 0 until dim)
       data(c) += g * d.syn1(c)
-    }
-  }
 
-  def dotProductSyn1(d : WordVectorWithAlpha) : Float = {
+  def dotProductSyn1(d: WordVectorWithAlpha): Float = {
     var f = 0.0f
-    for (j <- 0 to dim-1) {
+    for (j <- 0 until dim)
       f += data(j) * d.syn1(j)
-    }
     f
   }
 
-//  def deserialize(dataBytes : Array[Byte]) {
-//    for (i <- 0 to dim -1) {
-//      data(i) = FloatOps.getFloatFromBytes(dataBytes, i * 4)
-//    }
-//  }
 }
