@@ -1,8 +1,8 @@
 package com.intel.distml.app.mnist
 
 import com.intel.distml.api.Model
-import com.intel.distml.platform.{TrainingHelper, TrainingConf}
-import org.apache.spark.{SparkContext, SparkConf}
+import com.intel.distml.platform.{TrainingConf, TrainingHelper}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
  * Created by yunlong on 2/28/15.
@@ -11,10 +11,10 @@ object MNIST {
   @throws(classOf[InterruptedException])
   def main(args: Array[String]) {
 
-    var sparkMaster = args(0)
-    var sparkHome = args(1)
-    var sparkMem = args(2)
-    var appJars = args(3)
+    val sparkMaster = args(0)
+    val sparkHome = args(1)
+    val sparkMem = args(2)
+    val appJars = args(3)
 
     val conf = new SparkConf()
       .setMaster(sparkMaster)
@@ -30,10 +30,10 @@ object MNIST {
     val trainingFile: String = "hdfs://dl-s3:9000/test/mnist_train_1"
     val rawLines = spark.textFile(trainingFile)
 
-    val config: TrainingConf = new TrainingConf();
+    val config: TrainingConf = new TrainingConf()
     val m: Model = new MNISTModel
 
-    TrainingHelper.startTraining(spark, m, rawLines, config);
+    TrainingHelper.startTraining(spark, m, rawLines, config)
     System.out.println("digit recognition has ended!")
   }
 }

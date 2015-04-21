@@ -20,10 +20,10 @@ object RosenblattApp {
       System.exit(1)
     }
 
-    var sparkMaster = args(0)
-    var sparkHome = args(1)
-    var sparkMem = args(2)
-    var appJars = args(3)
+    val sparkMaster = args(0)
+    val sparkHome = args(1)
+    val sparkMem = args(2)
+    val appJars = args(3)
 
     val conf = new SparkConf()
       .setMaster(sparkMaster)
@@ -55,32 +55,30 @@ object RosenblattApp {
         0,1,1,1,0,0,0
       """.stripMargin.trim
 
-    val reader = new BufferedReader(new StringReader(data));
+    val reader = new BufferedReader(new StringReader(data))
 
-    var samples = new Array[PointSample](15)
-    var line = "";
+    val samples = new Array[PointSample](15)
+    var line = ""
     for(i <- 0 to samples.length-1) {
       line = reader.readLine.trim
-      val values = line.split(",");
+      val values = line.split(",")
       val x = new Array[Double](6)
       for (j <- 0 to 5) {
-        x(j) = Integer.parseInt(values(j));
+        x(j) = Integer.parseInt(values(j))
       }
-      val label = Integer.parseInt(values(6));
-      samples(i) = new PointSample(x, label);
+      val label = Integer.parseInt(values(6))
+      samples(i) = new PointSample(x, label)
     }
 
-    var sampleRdd = spark.parallelize(samples, 1);
-
+    val sampleRdd = spark.parallelize(samples, 1)
     val model: Rosenblatt = new Rosenblatt(6)
-
-    val config = new TrainingConf().iteration(4);
+    val config = new TrainingConf().iteration(4)
 
     TrainingHelper.startTraining(spark, model, sampleRdd, config)
 
     model.showResult()
 
-    spark.stop
+    spark.stop()
     System.out.println("===== Run Done ====")
   }
 }
