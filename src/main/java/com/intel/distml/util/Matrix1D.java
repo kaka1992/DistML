@@ -22,11 +22,11 @@ public class Matrix1D<T> extends Matrix {
     public Matrix1D(T t, int dim) {
         this.dim = dim;
         values = (T[]) Array.newInstance(t.getClass(), dim);
-        rowKeys = new KeyRange(0, dim-1);
+        rowKeys = new KeyRange(0, dim - 1);
     }
 
     public Matrix1D(T[] _values) {
-        this(_values, new KeyRange(0, _values.length-1));
+        this(_values, new KeyRange(0, _values.length - 1));
     }
 
     public Matrix1D(T[] _values, KeyRange rows) {
@@ -45,9 +45,8 @@ public class Matrix1D<T> extends Matrix {
 
     public T element(int key) {
         if (rowKeys instanceof KeyRange) {
-            return values[key - (int)((KeyRange)rowKeys).firstKey];
-        }
-        else {
+            return values[key - (int) ((KeyRange) rowKeys).firstKey];
+        } else {
             throw new RuntimeException("Matrix1D only support key range.");
         }
     }
@@ -67,17 +66,13 @@ public class Matrix1D<T> extends Matrix {
             Constructor cnInt = cls.getConstructor();
             Matrix1D<T> result = (Matrix1D<T>) cnInt.newInstance();
             return result;
-        }
-        catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
             e.printStackTrace();
-        }
-        catch (InvocationTargetException e) {
+        } catch (InvocationTargetException e) {
             e.printStackTrace();
-        }
-        catch (IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
             e.printStackTrace();
-        }
-        catch (InstantiationException e) {
+        } catch (InstantiationException e) {
             e.printStackTrace();
         }
 
@@ -95,10 +90,10 @@ public class Matrix1D<T> extends Matrix {
         if (rows instanceof KeyList) {
             HashMapMatrix<T> output = new HashMapMatrix<T>(dim);
             Iterator<Long> it = rows.iterator();
-            while(it.hasNext()) {
+            while (it.hasNext()) {
                 long key = it.next();
                 if (rowKeys.contains(key)) {
-                    output.put(key, element((int)key));
+                    output.put(key, element((int) key));
                 }
             }
             return output;
@@ -106,23 +101,23 @@ public class Matrix1D<T> extends Matrix {
 
         KeyCollection _rows = rowKeys.intersect(rows);
 
-            System.out.println("class type: " + getClass() + ", " + values[0].getClass());
+        System.out.println("class type: " + getClass() + ", " + values[0].getClass());
 
-            T[] _v = (T[]) Array.newInstance(values[0].getClass(), _rows.size());
-            Iterator<Long> it = _rows.iterator();
-            int index = 0;
-            while(it.hasNext()) {
-                int key = it.next().intValue();
-                _v[index] = element(key);
-                index++;
-            }
-            System.out.println("obj: " + _v.getClass() + ", " + _v[0]);
+        T[] _v = (T[]) Array.newInstance(values[0].getClass(), _rows.size());
+        Iterator<Long> it = _rows.iterator();
+        int index = 0;
+        while (it.hasNext()) {
+            int key = it.next().intValue();
+            _v[index] = element(key);
+            index++;
+        }
+        System.out.println("obj: " + _v.getClass() + ", " + _v[0]);
 
 
-            Matrix1D<T> result = (Matrix1D<T>) createEmptySubMatrix();
-            result.values = _v;
-            result.rowKeys = _rows;
-            return result;
+        Matrix1D<T> result = (Matrix1D<T>) createEmptySubMatrix();
+        result.values = _v;
+        result.rowKeys = _rows;
+        return result;
 
     }
 
@@ -130,7 +125,7 @@ public class Matrix1D<T> extends Matrix {
     public boolean mergeMatrices(List<Matrix> matrices) {
 
         boolean merged = true;
-        while(merged) {
+        while (merged) {
             merged = false;
             int i = 0;
             while (i < matrices.size()) {
@@ -203,38 +198,41 @@ public class Matrix1D<T> extends Matrix {
         return true;
     }
 
-    public void elementwiseAddition(Matrix1D m){
-        if(this.values.length!=m.values.length)return;
-        Float[] s=(Float[])this.values;
-        Float[] a=(Float[])m.values;
-        for(int i=0;i<this.values.length;i++)
-            s[i]=s[i]+a[i];
+    public void elementwiseAddition(Matrix1D m) {
+        if (this.values.length != m.values.length) return;
+        Float[] s = (Float[]) this.values;
+        Float[] a = (Float[]) m.values;
+        for (int i = 0; i < this.values.length; i++)
+            s[i] = s[i] + a[i];
     }
-    public void elementwiseSubtration(Matrix1D m){
-        if(this.values.length!=m.values.length)return;
-        Float[] s=(Float[])this.values;
-        Float[] a=(Float[])m.values;
-        for(int i=0;i<this.values.length;i++)
-            s[i]=s[i]-a[i];
+
+    public void elementwiseSubtration(Matrix1D m) {
+        if (this.values.length != m.values.length) return;
+        Float[] s = (Float[]) this.values;
+        Float[] a = (Float[]) m.values;
+        for (int i = 0; i < this.values.length; i++)
+            s[i] = s[i] - a[i];
     }
-    public void elementwiseMultipy(Matrix1D m){
-        if(this.values.length!=m.values.length)return;
-        Float[] s=(Float[])this.values;
-        Float[] a=(Float[])m.values;
-        for(int i=0;i<this.values.length;i++)
-            s[i]=s[i]*a[i];
+
+    public void elementwiseMultipy(Matrix1D m) {
+        if (this.values.length != m.values.length) return;
+        Float[] s = (Float[]) this.values;
+        Float[] a = (Float[]) m.values;
+        for (int i = 0; i < this.values.length; i++)
+            s[i] = s[i] * a[i];
     }
-    public void Subtration(Float r){
-        Float[] t=(Float[])this.values;
-        for(int i=0;i<this.values.length;i++)
-            t[i]=r-t[i];
+
+    public void Subtration(Float r) {
+        Float[] t = (Float[]) this.values;
+        for (int i = 0; i < this.values.length; i++)
+            t[i] = r - t[i];
     }
-    public void CopyFrom(Matrix1D m){
-        if(this.values.length!=m.values.length)return;
-        Float[] s=(Float[])this.values;
-        Float[] a=(Float[])m.values;
-        for(int i=0;i<this.values.length;i++)
-            s[i]=a[i];
+
+    public void CopyFrom(Matrix1D m) {
+        if (this.values.length != m.values.length) return;
+        Float[] s = (Float[]) this.values;
+        Float[] a = (Float[]) m.values;
+        System.arraycopy(a, 0, s, 0, this.values.length);
     }
 
 }

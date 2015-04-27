@@ -29,9 +29,7 @@ public class Matrix0D<T> extends Matrix {
     }
 
     protected Matrix createEmptySubMatrix() {
-        Matrix0D hm = new Matrix0D();
-
-        return hm;
+        return new Matrix0D();
     }
 
     public Matrix subMatrix(KeyCollection rows, KeyCollection cols) {

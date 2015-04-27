@@ -35,9 +35,7 @@ public class HashMapMatrix<T> extends Matrix {
                         result.addKey(k);
                 }
             } else {
-                Iterator<Long> it = keys.iterator();
-                while (it.hasNext()) {
-                    long k = it.next();
+                for (Long k : keys) {
                     if (otherKeys.contains(k))
                         result.addKey(k);
                 }
@@ -118,9 +116,8 @@ public class HashMapMatrix<T> extends Matrix {
     }
 
     protected Matrix createEmptySubMatrix() {
-        HashMapMatrix hm = new HashMapMatrix(dim);
 
-        return hm;
+        return new HashMapMatrix(dim);
     }
 
 
@@ -143,9 +140,7 @@ public class HashMapMatrix<T> extends Matrix {
                     hm.data.put(k, data.get(k));
             }
         } else {
-            Iterator<Long> it = keys.iterator();
-            while (it.hasNext()) {
-                long k = it.next();
+            for (Long k : keys) {
                 if (otherKeys.contains(k))
                     hm.data.put(k, data.get(k));
             }

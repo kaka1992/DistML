@@ -5,9 +5,6 @@ import java.util.List;
 
 public abstract class Matrix implements Serializable {
 
-//	protected KeyCollection rowKeys;
-//	protected KeyCollection colKeys;
-
 	public Matrix() {
 
 	}
